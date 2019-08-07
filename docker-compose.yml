@@ -1,0 +1,45 @@
+version: '3.5'
+
+networks:
+  main:
+
+services:
+  mysql:
+    image: mariadb:${MARIADB_VERSION}
+    networks:
+      - main
+    expose:
+      - 3306
+    ports:
+      - ${PORT_MYSQL}:3306
+    volumes:
+      - ./.docker/local/mysql/init:/docker-entrypoint-initdb.d/
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    restart: on-failure
+
+  mail:
+    image: djfarrelly/maildev
+    networks:
+      - main
+    expose:
+      - 25
+    ports:
+      - ${PORT_MAIL}:80
+    restart: on-failure
+
+  php:
+    image: bnjns/php:${PHP_VERSION}
+    networks:
+      - main
+    volumes:
+      - ${DIR_APP}:/var/www
+    ports:
+      - ${PORT_APP}:80
+    depends_on:
+      - mysql
+      - mail
+    restart: on-failure
